@@ -1,6 +1,9 @@
 {
   "name": "chopped-redux",
   "version": "1.0.1",
+  "main": "index.js",
+  "author": "acstll <arturo@arturu.com>",
+  "repository": "acstll/chopped-redux",
   "dependencies": {
     "lodash.mapvalues": "^3.0.1"
   },
