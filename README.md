@@ -2,9 +2,17 @@ Some simple Flux implementation based on [@gaearon](https://github.com/gaearon) 
 
 The idea is to provide a minimal, solid base without the React glue (you have to do that yourself). No hot reloading or time travelling (yet?).
 
-# Example
+## Install
 
-## Stores
+With [`npm`](http://npmjs.org) do:
+
+```bash
+npm install ??? --save
+```
+
+## Example
+
+### Stores
 
 Stores are pure functions, just like in Redux. They don't hold the state and don't emit events either. They just receive the state, update it, and return the new state.
 
@@ -31,9 +39,9 @@ module.exports = function (state, action) {
 }
 ```
 
-## Actions
+### Actions
 
-Actions should have this signature, always receiving a `dispatch` function as last argument. (There's a utility wrapper function to make this easy)
+Actions should have the following signature, always receiving a `dispatch` function as last argument. (There's a utility wrapper function to make this easy)
 
 ```js
 
@@ -52,7 +60,7 @@ exports.decrement = function (dispatch) {
 }
 ```
 
-## Constants (for action types)
+### Constants (for action types)
 
 Yep.
 
@@ -61,9 +69,9 @@ module.exports = {
   INCREMENT_COUNTER: 'INCREMENT_COUNTER',
   DECREMENT_COUNTER: 'DECREMENT_COUNTER',
 }
-``
+```
 
-## Make it work together
+### Make it work together
 
 ```js
 var fluxFactory = require('???')
@@ -95,6 +103,6 @@ actions.increment()
 unsubscribe()
 ```
 
-# License
+## License
 
 MIT
