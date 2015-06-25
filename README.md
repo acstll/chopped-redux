@@ -1,8 +1,10 @@
 # Chopped Redux
 
-A very small Flux implementation based on [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux).
+A very small Flux implementation based on [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), mainly inspired by this https://github.com/gaearon/redux/pull/166 and this https://github.com/gaearon/redux/issues/113#issuecomment-114049804
 
 The idea is to provide a minimal, solid base without the React glue (you have to do that yourself). No hot reloading or time travelling (yet?).
+
+This project follows [SemVer](http://semver.org/). 1.0 doesn't mean it's stable or production-ready.
 
 ## Install
 
@@ -25,7 +27,7 @@ var initialState = 0
 
 module.exports = function (state, action) {
   state = state || initialState
-  
+
   switch (action.type) {
     case actionTypes.INCREMENT_COUNTER:
       return state + 1
