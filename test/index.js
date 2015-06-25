@@ -29,7 +29,7 @@ var actions = {
 
 
 test('fluxFactory', function (t) {
-  t.plan(5)
+  t.plan(6)
 
   var flux1 = fluxFactory(stores, {})
   var flux2 = fluxFactory(stores, {})
@@ -39,6 +39,7 @@ test('fluxFactory', function (t) {
   t.ok(typeof flux1.getDispatcher === 'function', 'has `getDispatcher` method')
   t.ok(typeof flux1.getState === 'function', 'has `getState` method')
   t.ok(typeof flux1.subscribe === 'function', 'has `subscribe` method')
+  t.throws(fluxFactory, 'should throw if missing first argument')
 })
 
 test('flux instance dispatcher', function (t) {
