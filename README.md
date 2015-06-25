@@ -1,4 +1,6 @@
-Some simple Flux implementation based on [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux).
+# Chopped Redux
+
+A very small Flux implementation based on [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux).
 
 The idea is to provide a minimal, solid base without the React glue (you have to do that yourself). No hot reloading or time travelling (yet?).
 
@@ -7,7 +9,7 @@ The idea is to provide a minimal, solid base without the React glue (you have to
 With [`npm`](http://npmjs.org) do:
 
 ```bash
-npm install ??? --save
+npm install chopped-redux --save
 ```
 
 ## Example
@@ -74,7 +76,7 @@ module.exports = {
 ### Make it work together
 
 ```js
-var fluxFactory = require('???')
+var fluxFactory = require('chopped-redux')
 var wrap = fluxFactory.wrapActionCreators
 
 var stores = {
