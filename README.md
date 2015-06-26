@@ -16,6 +16,118 @@ With [`npm`](http://npmjs.org) do:
 npm install chopped-redux --save
 ```
 
+## API
+
+- Factory: fluxFactory
+  - dispatch
+  - getDispatcher
+  - getState
+  - subscribe
+- wrapActionCreators
+
+#### Factory: fluxFactory(reducer[, initialState])
+
+- *reducer* `Function|Object` These are your stores
+- *initialState* `Mixed` Anything you want to hold your state in
+- Returns `Object` A `flux` instance
+
+The `reducer` function should have this signature: 
+
+```js
+function (state, action) { 
+  // do something with state depending on the action type,
+  // ideally generating a fresh new value
+  return state
+}
+```
+
+What happens internally on every action dispatch is basically this:
+
+```js
+state = reducer(state, action)
+```
+
+If you pass an object with reducer functions, a new function will be created which will map the reduced state of every function to a key on the root state object. Like this:
+
+```js
+// Your stores
+{
+  foo: [Function],
+  bar: [Function],
+  baz: [Function]
+}
+
+// The root state inside the `flux` instance
+{
+  foo: {...} // the reduced state from `stores.foo`
+  bar: {...} // the reduced state from `stores.bar`
+  baz: {...} // the reduced state from `stores.baz`
+}
+
+// And you could access those like this
+flux.getState().foo
+```
+
+#### flux.dispatch(action)
+
+- *action* `Object`
+
+#### flux.getDispatcher()
+
+- Returns the `dispatch` function bound to the `flux` instance. Literally this: `return this.dispatch.bind(this)`
+
+#### flux.getState()
+
+- Returns `Object` Your state
+
+#### flux.subscribe(listener)
+
+- *listener* `Function` A callback that gets fired after every state update
+- Returns `Function` A function to remove the listener
+
+---
+
+#### fluxFactory.wrapActionCreators(actionCreators, dispatch)
+
+- *actionsCreators* `Object` Your action creators in an object
+- *dispatch* `Function` The dispatch function to bind to your action creators. You can get this from `flux.getDispatcher()`
+- Returns `Object` Your action creators bound to the dispatcher
+
+This is a helper function, so instead of writing this:
+
+```js
+var actionsCreators = {
+  exampleAction: function (foo) {
+    return {
+      type: constants.EXAMPLE_TYPE,
+      value: foo
+    }
+  }
+}
+
+flux.dispatch(actionCreators.exampleAction('bar'))
+```
+
+you can do this:
+
+```js
+var actionsCreators = {
+  exampleAction: function (foo, dispatch) {
+    return dispatch({
+      type: constants.EXAMPLE_TYPE,
+      value: foo
+    })
+  }
+}
+
+var wrap = fluxFactory.wrapActionCreators
+var actions = wrap(actionCreators, flux.getDispatcher())
+
+actions.exampleAction('bar') // dispatches!
+```
+
+and have the action automatically dispatched.
+
 ## Example
 
 ### Stores
@@ -47,7 +159,9 @@ module.exports = function (state, action) {
 
 ### Actions
 
-Actions should have the following signature, always receiving a `dispatch` function as last argument. (There's a utility wrapper function available to make this easy.)
+Action creators are functions that yield an action object (or *payload* in vanilla Flux terminology). They can simply return that object, or if you need to do async operations, you can pass in a dispatch callback and fire it passing in the action object. If the latter is the case, always pass the `dispatch` function as the last argument, so you can use the utility wrapper function (`wrapActionCreators`).
+
+Further reading: [The Evolution of Flux Frameworks](https://medium.com/@dan_abramov/the-evolution-of-flux-frameworks-6c16ad26bb31).
 
 ```js
 
@@ -83,35 +197,33 @@ module.exports = {
 var fluxFactory = require('chopped-redux')
 var wrap = fluxFactory.wrapActionCreators
 
+// Define stores and action creators
 var stores = {
-  counter: require('./stores/counter'),
-  beep: function (state, action) {
-    return action.type === SOME_ACTION_TYPE_CONSTANT
-      ? 'boop'
-      : state || undefined
-  }
+  counter: require('./stores/counter')
 }
-
 var actionCreators = {
-  counter: require('./actions/counter'),
+  counter: require('./actions/counter')
 }
 
+// Create a flux instance passing in the stores and initial state
 var flux = fluxFactory(stores, { counter: 1 })
+
+// Bind action creators to the dispatcher
 var actions = wrap(actionCreators, flux.getDispatcher())
 
+// Subscribe a callback to state updates
 var unsubscribe = flux.subscribe(function () {
   console.log(flux.getState())  
 })
 
+// Trigger an action: this dispatches the action,
+// the state tree in the flux instance goes through the store function(s),
+// and listener callbacks fire
 actions.increment()
 // => { counter: 2 }
 
 unsubscribe()
 ```
-
-## API
-
-*Coming soon*
 
 ## License
 
