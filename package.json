@@ -4,7 +4,7 @@
   "description": "A very small Flux implementation based on @gaearon Redux",
   "keywords": ["flux", "redux"],
   "homepage": "https://github.com/acstll/chopped-redux",
-  "main": "index.js",
+  "main": "src/",
   "author": "acstll <arturo@arturu.com>",
   "repository": "acstll/chopped-redux",
   "bugs": {
