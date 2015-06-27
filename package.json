@@ -1,8 +1,11 @@
 {
   "name": "chopped-redux",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A very small Flux implementation based on @gaearon Redux",
-  "keywords": ["flux", "redux"],
+  "keywords": [
+    "flux",
+    "redux"
+  ],
   "homepage": "https://github.com/acstll/chopped-redux",
   "main": "src/",
   "author": "acstll <arturo@arturu.com>",
