@@ -52,6 +52,20 @@ var immutableReducer = function (state, action) {
   return state
 }
 
+test('factory', function (t) {
+  t.plan(2)
+
+  var identity = function (x) { return x }
+  var a = fluxFactory(identity)
+  var b = fluxFactory(identity)
+
+  t.throws(function () {
+    fluxFactory()
+  }, 'throws if missing reducer param')
+
+  t.notEqual(a, b, 'no singleton')
+})
+
 test('mutable, listeners', function (t) {
   t.plan(4)
 
@@ -162,14 +176,4 @@ test('wrap action creators', function (t) {
 
   actions.decrement()
   t.equal(flux.getState().counter, 20, 'correctly')
-})
-
-test('no singleton', function (t) {
-  t.plan(1)
-
-  var identity = function (x) { return x }
-  var a = fluxFactory(identity)
-  var b = fluxFactory(identity)
-
-  t.notEqual(a, b, 'ok')
 })
