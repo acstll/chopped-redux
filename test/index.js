@@ -177,3 +177,10 @@ test('wrap action creators', function (t) {
   actions.decrement()
   t.equal(flux.getState().counter, 20, 'correctly')
 })
+
+test('empty dispatching', function (t) {
+  t.plan(1)
+
+  var flux = fluxFactory(reducer)
+  t.doesNotThrow(flux.dispatch, 'is possible')
+})

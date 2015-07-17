@@ -19,6 +19,8 @@ module.exports = function (reducer, state, listeners) {
       return action(dispatch, getState)
     }
 
+    action = action || {}
+
     state = reducer(state, action)
     listeners.forEach(function (fn) { fn(action) })
   }
