@@ -144,12 +144,20 @@ test('replaceState', function (t) {
 })
 
 test('wrap action creators', function (t) {
-  t.plan(2)
+  t.plan(3)
+
+  var inc = function (data) {
+    t.equal(data.foo, 'bar', 'arguments get passed in')
+
+    return {
+      type: INCREMENT_COUNTER
+    }
+  }
 
   var flux = fluxFactory(reducer, { counter: 20 })
-  var actions = flux.wrap({ increment: increment, decrement: decrement })
+  var actions = flux.wrap({ increment: inc, decrement: decrement })
 
-  actions.increment()
+  actions.increment({ foo: 'bar' })
   t.equal(flux.getState().counter, 21, 'works')
 
   actions.decrement()
