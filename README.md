@@ -2,11 +2,30 @@
 
 A very small Flux implementation based on [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), mainly inspired by [this](https://github.com/gaearon/redux/pull/166) and [this](https://github.com/gaearon/redux/issues/113#issuecomment-114049804).
 
-I recommend you try out [Redux](https://github.com/gaearon/redux) and go through its Github issues as it's a great source of knowledge and inspiration.
+The idea here is to provide a minimal, solid Flux (à la Redux) base without the [React](http://facebook.github.io/react/index.html) glue (you have to do that yourself), so it's possible to use this library with anything other than React. [Redux](https://github.com/gaearon/redux) allows you to do this too in 1.0, by [splitting itself](https://github.com/gaearon/redux/issues/230).
 
-The idea here is to provide a minimal, solid Flux base without the [React](http://facebook.github.io/react/index.html) glue (you have to do that yourself).
+You should be able to switch from Chopped Redux to Redux and viceversa without changing your flux code (constants, action creators and reducers).
 
-This project follows [SemVer](http://semver.org/). 1.0 doesn't mean it's stable or production-ready.
+## Bullet points
+
+Chopped main design goal:
+
+- All methods are first-class. You can freely pass them around without the need for `bind`ing.
+
+Why is Flux Redux-style so nice:
+
+- No singletons
+- Action creators and reducers (state-less stores) are pure functions
+- All state is kept in a single object, and you choose what that is (Immutable, mori, a plain object)
+- Plays well with Universal Javascript
+
+The things you'll miss from Redux here:
+
+- Hot reloading
+- Middleware
+- Built-in time-travel
+
+This project follows [SemVer](http://semver.org/).
 
 ## Install
 
@@ -18,25 +37,37 @@ npm install chopped-redux --save
 
 ## API
 
-- Factory: fluxFactory
-  - dispatch
-  - getDispatcher
-  - getState
-  - subscribe
-- wrapActionCreators
+```js
+var factory = require('chopped-redux')
+```
 
-#### Factory: fluxFactory(reducer[, initialState])
+Chopped Redux exports a single factory function that returns an object with three main methods:
 
-- *reducer* `Function|Object` These are your stores
+  - `dispatch`
+  - `getState`
+  - `subscribe`
+
+and two helpers:
+
+  - `wrap`
+  - `replaceState`
+
+I like to call this instance object `flux`, in Redux is called the `store`.
+
+The factory has a single mandatory param which is a `reducer` function.
+
+#### factory(reducer[, initialState, listeners])
+
+- *reducer* `Function`
 - *initialState* `Mixed` Anything you want to hold your state in
-- Returns `Object` A `flux` instance
+- *listeners* `Array` Listener callbacks that subscribe to dispatches
 
-The `reducer` function should have this signature: 
+The `reducer` function should have the folowwing signature:
 
 ```js
-function (state, action) { 
+function (state, action) {
   // do something with state depending on the action type,
-  // ideally generating a fresh new value
+  // ideally generating a fresh new (immutable) value
   return state
 }
 ```
@@ -47,183 +78,82 @@ What happens internally on every action dispatch is basically this:
 state = reducer(state, action)
 ```
 
-If you pass an object with reducer functions, a new function will be created which will map the reduced state of every function to a key on the root state object. Like this:
+---
+
+#### #dispatch(action)
+
+- *action* `Object|Function`
+
+Action creators should mostly return a plain object of the `{ type: DO_STUFF }` kind. If you need to do async stuff, return a function instead. This function receives `dispatch` and `getState` as params, so you can then actually `dispatch` the plain object needed for dispatching.
 
 ```js
-// Your stores
-{
-  foo: [Function],
-  bar: [Function],
-  baz: [Function]
-}
+var asyncActionCreator = function (data) {
+  return function (dispatch, getState) {
+    // do your async stuff
 
-// The root state inside the `flux` instance
-{
-  foo: {...} // the reduced state from `stores.foo`
-  bar: {...} // the reduced state from `stores.bar`
-  baz: {...} // the reduced state from `stores.baz`
+    dispatch({
+      type: STUFF_DONE,
+      payload: foo
+    })
+  }
 }
-
-// And you could access those like this
-flux.getState().foo
 ```
 
-#### flux.dispatch(action)
+#### #getState()
 
-- *action* `Object`
+- Returns `Object` The current state
 
-#### flux.getDispatcher()
-
-- Returns the `dispatch` function bound to the `flux` instance. Literally this: `return this.dispatch.bind(this)`
-
-#### flux.getState()
-
-- Returns `Object` Your state
-
-#### flux.subscribe(listener)
+#### #subscribe(listener)
 
 - *listener* `Function` A callback that gets fired after every state update
 - Returns `Function` A function to remove the listener
 
 ---
 
-#### fluxFactory.wrapActionCreators(actionCreators, dispatch)
+#### #wrap(methods)
 
-- *actionsCreators* `Object` Your action creators in an object
-- *dispatch* `Function` The dispatch function to bind to your action creators. You can get this from `flux.getDispatcher()`
-- Returns `Object` Your action creators bound to the dispatcher
+- *methods* `Object` An object with your action creators methods
+- Returns `Object` The same methods wrapping the dispatcher
 
-This is a helper function, so instead of writing this:
+So insted of doing this:
 
 ```js
-var actionsCreators = {
-  exampleAction: function (foo) {
-    return {
-      type: constants.EXAMPLE_TYPE,
-      value: foo
-    }
-  }
+var increment = function () {
+  return { type: INCREMENT }
 }
 
-flux.dispatch(actionCreators.exampleAction('bar'))
+flux.dispatch(increment())
 ```
 
 you can do this:
 
 ```js
-var actionsCreators = {
-  exampleAction: function (foo, dispatch) {
-    return dispatch({
-      type: constants.EXAMPLE_TYPE,
-      value: foo
-    })
-  }
-}
+var actions = flux.wrap({ increment: increment })
 
-var wrap = fluxFactory.wrapActionCreators
-var actions = wrap(actionCreators, flux.getDispatcher())
-
-actions.exampleAction('bar') // dispatches!
+actions.increment()
 ```
 
-and have the action automatically dispatched.
+The nice thing about this is that you can provide you view components with this wrapped action creator methods which you can call directly without needing the `flux` instance available.
 
-## Example
+#### #replaceState(state)
 
-### Stores
+- *state* `Mixed` Whatever your state is
 
-Stores are pure functions, just like in Redux. They don't hold the state and don't emit events either (that's why in Redux they're called Reducers; I prefer to keep calling them Stores). They just receive the state, update it, and return the new state.
+This will replace the current state reference in your `flux` instance. This could be used for debugging, time-travel. For example, you could keep a copy of your `state` object of a specific point in time, and restore it later.
 
 ```js
-var actionTypes = require('../constants/action-types')
+// Copy of current state
+var stateCopy = flux.getState()
 
-var initialState = 0
+// Do stuff
 
-module.exports = function (state, action) {
-  state = state || initialState
-
-  switch (action.type) {
-    case actionTypes.INCREMENT_COUNTER:
-      return state + 1
-      break
-
-    case actionTypes.DECREMENT_COUNTER:
-      return state - 1
-      break
-
-    default:
-      return state
-  }
-}
+// Some time later
+flux.replaceState(stateCopy)
 ```
 
-### Actions
-
-Action creators are functions that yield an action object (or *payload* in vanilla Flux terminology). They can simply return that object, or if you need to do async operations, you can pass in a dispatch callback and fire it passing in the action object. If the latter is the case, always pass the `dispatch` function as the last argument, so you can use the utility wrapper function (`wrapActionCreators`).
+---
 
 Further reading: [The Evolution of Flux Frameworks](https://medium.com/@dan_abramov/the-evolution-of-flux-frameworks-6c16ad26bb31).
-
-```js
-
-var actionTypes = require('../constants/action-types')
-
-exports.increment = function (dispatch) {
-  return dispatch({
-    type: actionTypes.INCREMENT_COUNTER
-  })
-}
-
-exports.decrement = function (dispatch) {
-  return dispatch({
-    type: actionTypes.DECREMENT_COUNTER
-  })
-}
-```
-
-### Constants (for action types)
-
-Yep.
-
-```js
-module.exports = {
-  INCREMENT_COUNTER: 'INCREMENT_COUNTER',
-  DECREMENT_COUNTER: 'DECREMENT_COUNTER',
-}
-```
-
-### Make it work together
-
-```js
-var fluxFactory = require('chopped-redux')
-var wrap = fluxFactory.wrapActionCreators
-
-// Define stores and action creators
-var stores = {
-  counter: require('./stores/counter')
-}
-var actionCreators = {
-  counter: require('./actions/counter')
-}
-
-// Create a flux instance passing in the stores and initial state
-var flux = fluxFactory(stores, { counter: 1 })
-
-// Bind action creators to the dispatcher
-var actions = wrap(actionCreators, flux.getDispatcher())
-
-// Subscribe a callback to state updates
-var unsubscribe = flux.subscribe(function () {
-  console.log(flux.getState())  
-})
-
-// Trigger an action: this dispatches the action,
-// the state tree in the flux instance goes through the store function(s),
-// and listener callbacks fire
-actions.increment()
-// => { counter: 2 }
-
-unsubscribe()
-```
 
 ## License
 
