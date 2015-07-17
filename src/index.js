@@ -1,61 +1,56 @@
 
-var mapValues = require('./map-values')
+module.exports = function (reducer, state, listeners) {
+  listeners = listeners || []
 
-var combineReducers = function combineReducers (reducers) {
-  return function (tree, action) {
-    tree = tree || {}
-
-    return mapValues(reducers, function (fn, key) {
-      return fn(tree[key], action)
-    })
-  }
-}
-
-module.exports = function fluxFactory (reducer, initialState) {
-  if (!reducer) {
-    throw new Error('The `reducer` param is mandatory')
+  if (typeof reducer !== 'function') {
+    throw new TypeError('The `reducer` param must be a function')
   }
 
-  var reduce = typeof reducer === 'function'
-    ? reducer
-    : combineReducers(reducer)
+  function getState () {
+    return state
+  }
 
-  return {
-    reduce: reduce,
+  function replaceState (nextState) {
+    state = nextState
+  }
 
-    state: initialState !== null ? initialState : Object.create(null),
-
-    listeners: [],
-
-    dispatch: function (action) {
-      var self = this
-      self.state = self.reduce(self.state, action)
-      self.listeners.forEach(function (listener) {
-        listener(action)
-      })
-    },
-
-    getDispatcher: function () {
-      var self = this
-      return self.dispatch.bind(self)
-    },
-
-    getState: function () {
-      var self = this
-      return self.state
-    },
-
-    subscribe: function (listener) {
-      var self = this
-      self.listeners.push(listener)
-
-      return function unsubscribe () {
-        var index = self.listeners.indexOf(listener)
-        self.listeners.splice(index, 1)
-      }
+  function dispatch (action) {
+    if (typeof action === 'function') {
+      return action(dispatch, getState)
     }
 
+    state = reducer(state, action)
+    listeners.forEach(function (fn) { fn(action) })
+  }
+
+  function wrap (methods) {
+    var wrapped = {}
+
+    Object.keys(methods).forEach(function (key) {
+      if (typeof methods[key] === 'function') {
+        wrapped[key] = function () {
+          dispatch(methods[key].apply(null, arguments))
+        }
+      }
+    })
+
+    return wrapped
+  }
+
+  function subscribe (fn) {
+    listeners.push(fn)
+
+    return function unsubscribe () {
+      var index = listeners.indexOf(fn)
+      listeners.splice(index, 1)
+    }
+  }
+
+  return {
+    getState: getState,
+    replaceState: replaceState,
+    dispatch: dispatch,
+    wrap: wrap,
+    subscribe: subscribe
   }
 }
-
-module.exports.wrapActionCreators = require('./wrap-action-creators')

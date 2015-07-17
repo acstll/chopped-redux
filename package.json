@@ -1,7 +1,7 @@
 {
   "name": "chopped-redux",
   "version": "1.0.4",
-  "description": "A very small Flux implementation based on @gaearon Redux",
+  "description": "A tiny Flux implementation based on @gaearon Redux",
   "keywords": [
     "flux",
     "redux"
@@ -17,12 +17,12 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "faucet": "0.0.1",
+    "immutable": "^3.7.4",
     "standard": "^4.3.2",
     "tape": "^4.0.0"
   },
   "scripts": {
-    "test": "npm run lint && node test/index.js | faucet",
-    "lint": "standard ."
+    "test": "npm run lint && node test/index.js",
+    "lint": "standard"
   }
 }
