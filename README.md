@@ -133,21 +133,21 @@ var actions = flux.wrap({ increment: increment })
 actions.increment()
 ```
 
-The nice thing about this is that you can provide you view components with this wrapped action creator methods which you can call directly without needing the `flux` instance available.
+The nice thing about this is that you can provide you view components with these wrapped action creator methods which you can call directly without needing the `flux` instance available.
 
 #### #replaceState(state)
 
 - *state* `Mixed` Whatever your state is
 
-This will replace the current state reference in your `flux` instance. This could be used for debugging, time-travel. For example, you could keep a copy of your `state` object of a specific point in time, and restore it later.
+This will replace the current state reference in your `flux` instance. This could be used for debugging, time-travel, etc. For example, you could keep a copy of your `state` object of a specific point in time, and restore it later.
 
 ```js
-// Copy of current state
+// Copy of immutable current state
 var stateCopy = flux.getState()
 
 // Do stuff
 
-// Some time later
+// Some time later, roll back
 flux.replaceState(stateCopy)
 ```
 
