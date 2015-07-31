@@ -142,7 +142,7 @@ test('replaceState', function (t) {
 })
 
 test('wrap/curry action factories', function (t) {
-  t.plan(2)
+  t.plan(3)
 
   var inc = function (dispatch, data) {
     t.equal(data.foo, 'bar', 'arguments get passed in')
@@ -157,6 +157,10 @@ test('wrap/curry action factories', function (t) {
 
   actions.increment({ foo: 'bar' })
   t.equal(store.getState().counter, 21, 'works')
+
+  t.throws(function () {
+    wrap({ increment: increment }, store.dispatch)
+  }, 'must take at least 2 arguments')
 })
 
 test('empty dispatching', function (t) {
