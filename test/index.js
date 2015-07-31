@@ -9,7 +9,7 @@ var wrap = require('../wrap')
 var INCREMENT_COUNTER = 'INCREMENT_COUNTER'
 var DECREMENT_COUNTER = 'DECREMENT_COUNTER'
 
-// Action factories (creators)
+// Action helpers
 var increment = function (dispatch) {
   dispatch({ type: INCREMENT_COUNTER })
 }
