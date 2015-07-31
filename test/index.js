@@ -2,22 +2,19 @@
 var test = require('tape')
 var Immutable = require('immutable')
 
-var fluxFactory = require('../')
+var createStore = require('../')
+var wrap = require('../src/wrap')
 
-// Silly constants
+// Action types
 var INCREMENT_COUNTER = 'INCREMENT_COUNTER'
 var DECREMENT_COUNTER = 'DECREMENT_COUNTER'
 
-// Actions
-var increment = function () {
-  return {
-    type: INCREMENT_COUNTER
-  }
+// Action factories (creators)
+var increment = function (dispatch) {
+  dispatch({ type: INCREMENT_COUNTER })
 }
-var decrement = function () {
-  return {
-    type: DECREMENT_COUNTER
-  }
+var decrement = function (dispatch) {
+  dispatch({ type: DECREMENT_COUNTER })
 }
 
 // Initial state
@@ -56,11 +53,11 @@ test('factory', function (t) {
   t.plan(2)
 
   var identity = function (x) { return x }
-  var a = fluxFactory(identity)
-  var b = fluxFactory(identity)
+  var a = createStore(identity)
+  var b = createStore(identity)
 
   t.throws(function () {
-    fluxFactory()
+    createStore()
   }, 'throws if missing reducer param')
 
   t.notEqual(a, b, 'no singleton')
@@ -69,51 +66,51 @@ test('factory', function (t) {
 test('mutable, listeners', function (t) {
   t.plan(4)
 
-  var flux = fluxFactory(reducer, state)
+  var store = createStore(reducer, state)
 
-  flux.subscribe(function () {})
-  var unsubscribe = flux.subscribe(function () { t.pass('listener called') })
-  flux.subscribe(function () {})
+  store.subscribe(function () {})
+  var unsubscribe = store.subscribe(function () { t.pass('listener called') })
+  store.subscribe(function () {})
 
-  flux.dispatch(increment())
-  t.equal(flux.getState().counter, 2, 'action dispatched 1')
+  increment(store.dispatch)
+  t.equal(store.getState().counter, 2, 'action dispatched 1')
 
   unsubscribe()
 
-  flux.dispatch(decrement())
-  t.equal(flux.getState().counter, 1, 'action dispatched 1')
+  decrement(store.dispatch)
+  t.equal(store.getState().counter, 1, 'action dispatched 1')
 
-  t.equal(flux.getState(), state, 'state is the same mutable object')
+  t.equal(store.getState(), state, 'state is the same mutable object')
 })
 
 test('immutable', function (t) {
   t.plan(3)
 
-  var flux = fluxFactory(immutableReducer, immutableState)
+  var store = createStore(immutableReducer, immutableState)
 
-  flux.dispatch(increment())
-  t.equal(flux.getState().get('counter'), 2, 'action dispatched 1')
+  increment(store.dispatch)
+  t.equal(store.getState().get('counter'), 2, 'action dispatched 1')
 
-  flux.dispatch(decrement())
-  t.equal(flux.getState().get('counter'), 1, 'action dispatched 1')
+  decrement(store.dispatch)
+  t.equal(store.getState().get('counter'), 1, 'action dispatched 1')
 
-  t.notEqual(flux.getState(), immutableState, 'state is not the same object')
+  t.notEqual(store.getState(), immutableState, 'state is not the same object')
 })
 
 test('no initial state provided', function (t) {
   t.plan(1)
 
-  var flux = fluxFactory(reducer, null)
+  var store = createStore(reducer, null)
 
-  flux.dispatch(decrement())
-  t.equal(flux.getState().counter, 9, 'gets set in reducer')
+  store.dispatch({ type: DECREMENT_COUNTER })
+  t.equal(store.getState().counter, 9, 'gets set in reducer')
 })
 
 test('first-class dispatch and getState, no bind', function (t) {
   t.plan(2)
 
   var initialState = { counter: 5 }
-  var flux = fluxFactory(reducer, initialState)
+  var store = createStore(reducer, initialState)
 
   function wrapper (fn) {
     return function (a) {
@@ -121,66 +118,50 @@ test('first-class dispatch and getState, no bind', function (t) {
     }
   }
 
-  var dispatch = wrapper(flux.dispatch)
-  var getState = wrapper(flux.getState)
+  var dispatch = wrapper(store.dispatch)
+  var getState = wrapper(store.getState)
 
   t.equal(getState(), initialState, 'getState')
 
-  dispatch(increment())
+  increment(dispatch)
   t.equal(getState().counter, 6, 'dispatch')
-})
-
-test('handle actions being functions', function (t) {
-  t.plan(2)
-
-  var flux = fluxFactory(reducer, { counter: 32 })
-
-  flux.dispatch(function (dispatch, getState) {
-    t.equal(getState().counter, 32, 'getState gets passed in')
-    dispatch({ type: INCREMENT_COUNTER })
-  })
-
-  t.equal(flux.getState().counter, 33, 'alright')
 })
 
 test('replaceState', function (t) {
   t.plan(2)
 
   var initialState = { counter: -1 }
-  var flux = fluxFactory(reducer, initialState)
+  var store = createStore(reducer, initialState)
 
-  flux.dispatch(increment())
-  t.equal(flux.getState().counter, 0, '(test dispatch)')
+  increment(store.dispatch)
+  t.equal(store.getState().counter, 0, '(test dispatch)')
 
-  flux.replaceState({ counter: 24 })
-  flux.dispatch(decrement())
-  t.equal(flux.getState().counter, 23, 'works')
+  store.replaceState({ counter: 24 })
+  decrement(store.dispatch)
+  t.equal(store.getState().counter, 23, 'works')
 })
 
-test('wrap action creators', function (t) {
-  t.plan(3)
+test('wrap/curry action factories', function (t) {
+  t.plan(2)
 
-  var inc = function (data) {
+  var inc = function (dispatch, data) {
     t.equal(data.foo, 'bar', 'arguments get passed in')
 
-    return {
+    dispatch({
       type: INCREMENT_COUNTER
-    }
+    })
   }
 
-  var flux = fluxFactory(reducer, { counter: 20 })
-  var actions = flux.wrap({ increment: inc, decrement: decrement })
+  var store = createStore(reducer, { counter: 20 })
+  var actions = wrap({ increment: inc }, store.dispatch)
 
   actions.increment({ foo: 'bar' })
-  t.equal(flux.getState().counter, 21, 'works')
-
-  actions.decrement()
-  t.equal(flux.getState().counter, 20, 'correctly')
+  t.equal(store.getState().counter, 21, 'works')
 })
 
 test('empty dispatching', function (t) {
   t.plan(1)
 
-  var flux = fluxFactory(reducer)
-  t.doesNotThrow(flux.dispatch, 'is possible')
+  var store = createStore(reducer)
+  t.doesNotThrow(store.dispatch, 'is possible')
 })
