@@ -1,31 +1,16 @@
 # Chopped Redux
 
-A very small Flux implementation based on [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), mainly inspired by [this](https://github.com/gaearon/redux/pull/166) and [this](https://github.com/gaearon/redux/issues/113#issuecomment-114049804).
+[badges here]
 
-The idea here is to provide a minimal, solid Flux (à la Redux) base without the [React](http://facebook.github.io/react/index.html) glue (you have to do that yourself), so it's possible to use this library with anything other than React. [Redux](https://github.com/gaearon/redux) allows you to do this too in 1.0, by [splitting itself](https://github.com/gaearon/redux/issues/230).
+This library is a subset of [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), which claims to be a "Predictable state container for JavaScript apps".
 
-You should be able to switch from Chopped Redux to Redux and viceversa without changing your flux code (constants, action creators and reducers).
-
-## Bullet points
-
-Chopped main design goal:
-
-- All methods are first-class. You can freely pass them around without the need for `bind`ing.
-
-Why is Flux Redux-style so nice:
-
-- No singletons
-- Action creators and reducers (state-less stores) are pure functions
-- All state is kept in a single object, and you choose what that is (Immutable, mori, a plain object)
-- Plays well with Universal Javascript
-
-The things you'll miss from Redux here:
-
-- Hot reloading
-- Middleware
-- Built-in time-travel
+Redux is based on [Facebook's Flux](https://facebook.github.io/flux/) but it's a lot more simple a straightforward. Chopped Redux follows the same principles and ideas but cutting off features. If you care, it's 30 sloc (0.75 kB).
 
 This project follows [SemVer](http://semver.org/).
+
+## Motivation
+
+In the beginning, Redux was a [React](http://facebook.github.io/react/) thing. So I wanted to have a similar library not tight to any rendering/view-layer library, and I was mainly inspired by [this](https://github.com/gaearon/redux/pull/166) and [this](https://github.com/gaearon/redux/issues/113#issuecomment-114049804), ideas which made the Flux unidirectional data-flow very simple. Redux is [free from React](https://github.com/gaearon/redux/issues/230) starting at 1.0. Still Chopped is a simpler alternative to it (though Redux is itself very small and simple). The things you'll miss from Redux here are basically `Middleware`, ES2015/7 magic and restrictions. Hot-reloading and time-travel are possible if you know what you're doing, or **why** you're doing it, but it's **not built-in**.
 
 ## Install
 
@@ -35,34 +20,45 @@ With [`npm`](http://npmjs.org) do:
 npm install chopped-redux --save
 ```
 
+## Usage
+
+This is how it works:
+
+- You `dispatch` an `action`
+- The `state` gets updated based on that `action`
+- All `listeners` get notified of the `state` change
+
+[code here]
+
+Guidelines for success:
+
+- All state of your app goes into `state`, a single object
+- The `reducer` function is **pure** (it should *only* update and return new `state` and nothing else)
+- `actions` are plain objects with at least two properties `type` (String) and `payload` (Mixed)
+- You do async inside helper functions [(action dispatchers)](#async-and-actions-creators) that call `dispatch` when done
+
 ## API
 
 ```js
-var factory = require('chopped-redux')
+var chopped = require('chopped-redux')
 ```
 
-Chopped Redux exports a single factory function that returns an object with three main methods:
+Chopped Redux exports a single factory function that returns an object with four methods:
 
   - `dispatch`
   - `getState`
   - `subscribe`
-
-and two helpers:
-
-  - `wrap`
   - `replaceState`
-
-I like to call this instance object `flux`, in Redux is called the `store`.
 
 The factory has a single mandatory param which is a `reducer` function.
 
-#### factory(reducer[, initialState, listeners])
+#### chopped(reducer[, initialState, listeners])
 
 - *reducer* `Function`
 - *initialState* `Mixed` Anything you want to hold your state in
 - *listeners* `Array` Listener callbacks that subscribe to dispatches
 
-The `reducer` function should have the folowwing signature:
+The `reducer` function should have the following signature:
 
 ```js
 function (state, action) {
@@ -82,22 +78,8 @@ state = reducer(state, action)
 
 #### #dispatch(action)
 
-- *action* `Object|Function`
-
-Action creators should mostly return a plain object of the `{ type: DO_STUFF }` kind. If you need to do async stuff, return a function instead. This function receives `dispatch` and `getState` as params, so you can then actually `dispatch` the plain object needed for dispatching.
-
-```js
-var asyncActionCreator = function (data) {
-  return function (dispatch, getState) {
-    // do your async stuff
-
-    dispatch({
-      type: STUFF_DONE,
-      payload: foo
-    })
-  }
-}
-```
+- Returns `undefined`
+- *action* `Object`
 
 #### #getState()
 
@@ -105,55 +87,43 @@ var asyncActionCreator = function (data) {
 
 #### #subscribe(listener)
 
-- *listener* `Function` A callback that gets fired after every state update
 - Returns `Function` A function to remove the listener
-
----
-
-#### #wrap(methods)
-
-- *methods* `Object` An object with your action creators methods
-- Returns `Object` The same methods wrapping the dispatcher
-
-So insted of doing this:
-
-```js
-var increment = function () {
-  return { type: INCREMENT }
-}
-
-flux.dispatch(increment())
-```
-
-you can do this:
-
-```js
-var actions = flux.wrap({ increment: increment })
-
-actions.increment()
-```
-
-The nice thing about this is that you can provide you view components with these wrapped action creator methods which you can call directly without needing the `flux` instance available.
+- *listener* `Function` A callback that gets fired after every state update
 
 #### #replaceState(state)
 
+- Returns `undefined`
 - *state* `Mixed` Whatever your state is
 
-This will replace the current state reference in your `flux` instance. This could be used for debugging, time-travel, etc. For example, you could keep a copy of your `state` object of a specific point in time, and restore it later.
-
-```js
-// Copy of immutable current state
-var stateCopy = flux.getState()
-
-// Do stuff
-
-// Some time later, roll back
-flux.replaceState(stateCopy)
-```
+This will replace the current state reference in your `store` instance. This could be used for debugging, time-travel, etc. Beware you need to call `dispatch` after replacing the state if you want your views to update or whatever.
 
 ---
 
-Further reading: [The Evolution of Flux Frameworks](https://medium.com/@dan_abramov/the-evolution-of-flux-frameworks-6c16ad26bb31).
+### Helpers
+
+#### #wrap(methods, dispatch)
+
+Available at `require('chopped-redux/wrap')`.
+
+This is a highly opinionated helper that binds your action dispatchers (aka action creators) to a `store.dispatch` instance, by currying them.
+
+This functions are meant to have this signature `function (dispatch, payload) {}`. See [Async and action creators](#async-and-actions-creators) below.
+
+- Returns `Object` The same methods wrapping the dispatcher
+- *methods* `Object` An object with your action dispatcher functions
+- *dispatch* `Function` The `dispatch` method from your `store` instance
+
+---
+
+## Async and action creators
+
+There's this concept of Action Creators in vanilla Flux… if you need to do async, delegate `dispatch`ing actions to your helper functions; if not, simply `dispatch` the action directly. [more here]
+Avoid arguments apart from `dispatch` and `payload` (no more ugly `ActionCreators.addTodo(text)`).
+
+## Further reading
+
+https://gist.github.com/vslinko/cab24085f029def8997b by @vslinko  
+[The Evolution of Flux Frameworks](https://medium.com/@dan_abramov/the-evolution-of-flux-frameworks-6c16ad26bb31)
 
 ## License
 
