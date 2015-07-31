@@ -159,7 +159,7 @@ foo()
 
 ```
 
-I prefer to (partly) avoid the concept of Action Creators with a simpler approach, namely this:
+I prefer to (partly) avoid the concept of Action Creators as mandatory, indirect boilerplate with a simpler approach  based only on the necessity of delaying the dispatch, namely this:
 
 ```js
 function foo (dispatch, payload) {
@@ -174,7 +174,7 @@ function foo (dispatch, payload) {
 foo(store.dispatch, { foo: ‘bar’ })
 ```
 
-in which the `dispatch` callback always gets passed in as first argument.
+a function in which the `dispatch` callback always gets passed-in as first argument.
 
 If you care about names, I would call this an *action dispatcher* function, because that’s what it does. There’s no nesting, no type checking, no complexity. You just pass in a callback for dispatching an action with some payload. You’re just delegating `dispatch`ing actions to a helper function to do some things before the dispatch.
 
