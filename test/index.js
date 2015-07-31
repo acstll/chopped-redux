@@ -3,7 +3,7 @@ var test = require('tape')
 var Immutable = require('immutable')
 
 var createStore = require('../')
-var wrap = require('../src/wrap')
+var wrap = require('../wrap')
 
 // Action types
 var INCREMENT_COUNTER = 'INCREMENT_COUNTER'

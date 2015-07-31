@@ -8,7 +8,7 @@
     "state"
   ],
   "homepage": "https://github.com/acstll/chopped-redux",
-  "main": "src/",
+  "main": "index.js",
   "author": "acstll <arturo@arturu.com>",
   "repository": "acstll/chopped-redux",
   "bugs": {
@@ -25,7 +25,7 @@
     "tape": "^4.0.0"
   },
   "scripts": {
-    "test": "npm run lint && node test/index.js",
+    "test": "node test/index.js",
     "lint": "standard"
   }
 }
