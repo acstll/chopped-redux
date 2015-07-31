@@ -35,7 +35,7 @@ Guidelines for success:
 - All state of your app goes into `state`, a single object
 - The `reducer` function is **pure** (it should *only* update and return new `state` and nothing else)
 - `actions` are plain objects with at least two properties `type` (String) and `payload` (Mixed)
-- You do async inside helper functions [(action dispatchers)](#async-and-actions-creators) that call `dispatch` when done
+- You do async inside helper functions [(action dispatchers)](#async-and-action-creators) that call `dispatch` when done
 
 ## API
 
@@ -52,7 +52,7 @@ Chopped Redux exports a single factory function that returns an object with four
 
 The factory has a single mandatory param which is a `reducer` function.
 
-#### chopped(reducer[, initialState, listeners])
+#### `chopped(reducer[, initialState, listeners])``
 
 - *reducer* `Function`
 - *initialState* `Mixed` Anything you want to hold your state in
@@ -76,21 +76,21 @@ state = reducer(state, action)
 
 ---
 
-#### #dispatch(action)
+#### `dispatch(action)`
 
 - Returns `undefined`
 - *action* `Object`
 
-#### #getState()
+#### `getState()`
 
 - Returns `Object` The current state
 
-#### #subscribe(listener)
+#### `subscribe(listener)`
 
 - Returns `Function` A function to remove the listener
 - *listener* `Function` A callback that gets fired after every state update
 
-#### #replaceState(state)
+#### `replaceState(state)`
 
 - Returns `undefined`
 - *state* `Mixed` Whatever your state is
@@ -101,13 +101,13 @@ This will replace the current state reference in your `store` instance. This cou
 
 ### Helpers
 
-#### #wrap(methods, dispatch)
+#### `wrap(methods, dispatch)`
 
 Available at `require('chopped-redux/wrap')`.
 
 This is a highly opinionated helper that binds your action dispatchers (aka action creators) to a `store.dispatch` instance, by currying them.
 
-This functions are meant to have this signature `function (dispatch, payload) {}`. See [Async and action creators](#async-and-actions-creators) below.
+This functions are meant to have this signature `function (dispatch, payload) {}`. See [Async and action creators](#async-and-action-creators) below.
 
 - Returns `Object` The same methods wrapping the dispatcher
 - *methods* `Object` An object with your action dispatcher functions
