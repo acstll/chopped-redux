@@ -1,6 +1,6 @@
 # Chopped Redux
 
-[badges here]
+![npm version](https://img.shields.io/npm/v/chopped-redux.svg) ![npm downloads](https://img.shields.io/npm/dm/chopped-redux.svg)
 
 This library is a subset of [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), which claims to be a "Predictable state container for JavaScript apps".
 
@@ -28,7 +28,29 @@ This is how it works:
 - The `state` gets updated based on that `action`
 - All `listeners` get notified of the `state` change
 
-[code here]
+```js
+var chopped = require('chopped-redux')
+
+function reducer (state, action) {
+  state = state || 0 // initialize state if empty
+
+  if (action.type === 'increment') {
+    return state + 1
+  }
+
+  return state // always return state
+}
+
+var store = chopped(reducer)
+var action = { type: 'increment' } // actions are objects
+
+store.subscribe(function () {
+  console.log(store.getState())
+})
+
+store.dispatch(action)
+// => 1
+```
 
 Guidelines for success:
 
@@ -40,7 +62,7 @@ Guidelines for success:
 ## API
 
 ```js
-var chopped = require('chopped-redux')
+var createStore = require('chopped-redux')
 ```
 
 Chopped Redux exports a single factory function that returns an object with four methods:
@@ -52,7 +74,7 @@ Chopped Redux exports a single factory function that returns an object with four
 
 The factory has a single mandatory param which is a `reducer` function.
 
-#### `chopped(reducer[, initialState, listeners])``
+#### `createStore(reducer[, initialState, listeners])`
 
 - *reducer* `Function`
 - *initialState* `Mixed` Anything you want to hold your state in
@@ -97,8 +119,6 @@ state = reducer(state, action)
 
 This will replace the current state reference in your `store` instance. This could be used for debugging, time-travel, etc. Beware you need to call `dispatch` after replacing the state if you want your views to update or whatever.
 
----
-
 ### Helpers
 
 #### `wrap(methods, dispatch)`
@@ -117,8 +137,56 @@ This functions are meant to have this signature `function (dispatch, payload) {}
 
 ## Async and action creators
 
-There's this concept of Action Creators in vanilla Flux… if you need to do async, delegate `dispatch`ing actions to your helper functions; if not, simply `dispatch` the action directly. [more here]
-Avoid arguments apart from `dispatch` and `payload` (no more ugly `ActionCreators.addTodo(text)`).
+Handling async stuff in vanilla Flux is a pain. In the beginning of Flux we were making API calls inside our Stores, that turned out to be a bad idea. So they came up with this pompous concept of Action Creators to confuse us all (at least for a while). [If you’re still confused, Action Creators are functions that return Actions, which are simply objects; so Action == plain object, Action Creator == function that creates an Action.] Apparently no-one knows how to do this right.
+
+In Redux there’s middleware. The [thunk](https://github.com/gaearon/redux-thunk) middleware *transforms* an Action Creator (they call it “intent”) into an object that you can dispatch, and you *create* Action Creators like this:
+
+```js
+function foo (bar) {
+  // do async stuff
+
+  return function (dispatch) {
+    dispatch({
+      type: FOO,
+      bar: bar
+    })
+  }
+}
+
+// after binding it and what not, call it
+
+foo()
+
+```
+
+I prefer to (partly) avoid the concept of Action Creators with a simpler approach, namely this:
+
+```js
+function foo (dispatch, payload) {
+  // do async stuff
+
+  dispatch({
+    type: FOO, 
+    payload: payload
+  })
+}
+
+foo(store.dispatch, { foo: ‘bar’ })
+```
+
+in which the `dispatch` callback always gets passed in as first argument.
+
+If you care about names, I would call this an *action dispatcher* function, because that’s what it does. There’s no nesting, no type checking, no complexity. You just pass in a callback for dispatching an action with some payload. You’re just delegating `dispatch`ing actions to a helper function to do some things before the dispatch.
+
+If you don’t need async, simply `dispatch` the action directly and you’ve got one less function to care about.
+
+```js
+store.dispatch({ type: FOO, payload: payload })
+```
+
+If you want to be consistent, go always the async way no matter what.
+
+No more `ActionCreators.addTodo(text)`.
 
 ## Further reading
 
