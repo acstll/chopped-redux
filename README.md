@@ -29,7 +29,7 @@ This is how it works:
 - All `listeners` get notified of the `state` change
 
 ```js
-var chopped = require('chopped-redux')
+var createStore = require('chopped-redux')
 
 function reducer (state, action) {
   state = state || 0 // initialize state if empty
@@ -41,7 +41,7 @@ function reducer (state, action) {
   return state // always return state
 }
 
-var store = chopped(reducer)
+var store = createStore(reducer)
 var action = { type: 'increment' } // actions are objects
 
 store.subscribe(function () {
@@ -57,7 +57,7 @@ Guidelines for success:
 - All state of your app goes into `state`, a single object
 - The `reducer` function is **pure** (it should *only* update and return new `state` and nothing else)
 - `actions` are plain objects with at least two properties `type` (String) and `payload` (Mixed)
-- You do async inside helper functions [(action dispatchers)](#async-and-action-creators) that call `dispatch` when done
+- You do async inside functions [(action dispatchers)](#async-and-action-creators) that call `dispatch` when done
 
 ## API
 
@@ -125,9 +125,9 @@ This will replace the current state reference in your `store` instance. This cou
 
 Available at `require('chopped-redux/wrap')`.
 
-This is a highly opinionated helper that binds your action dispatchers (aka action creators) to a `store.dispatch` instance, by currying them.
+This is a highly opinionated helper that "binds" your action dispatchers (aka action creators) to the `dispatch`er of your `store` instance, by currying them.
 
-This functions are meant to have this signature `function (dispatch, payload) {}`. See [Async and action creators](#async-and-action-creators) below.
+**These functions should expect at least two arguments.** Something like this makes sense: `function (dispatch, payload) {}`. See [Async and action creators](#async-and-action-creators) below.
 
 - Returns `Object` The same methods wrapping the dispatcher
 - *methods* `Object` An object with your action dispatcher functions
@@ -137,9 +137,9 @@ This functions are meant to have this signature `function (dispatch, payload) {}
 
 ## Async and action creators
 
-Handling async stuff in vanilla Flux is a pain. In the beginning of Flux we were making API calls inside our Stores, that turned out to be a bad idea. So they came up with this pompous concept of Action Creators to confuse us all (at least for a while). [If you’re still confused, Action Creators are functions that return Actions, which are simply objects; so Action == plain object, Action Creator == function that creates an Action.] Apparently no-one knows how to do this right.
+Handling async stuff in vanilla Flux is a pain. In the beginning of Flux we were making API calls inside our Stores, that turned out to be a bad idea. So they came up with this pompous concept of Action Creators to confuse us all (at least for a while). [If you’re still confused, Action Creators are functions that return Actions, which are simply objects; so Action == plain object; Action Creator == function that creates an Action object.] Apparently no-one knows how to do this right.
 
-In Redux there’s middleware. The [thunk](https://github.com/gaearon/redux-thunk) middleware *transforms* an Action Creator (they call it “intent”) into an object that you can dispatch, and you *create* Action Creators like this:
+In Redux there’s middleware. The [thunk](https://github.com/gaearon/redux-thunk) middleware *transforms* an Action Creator (they call it “intent”) into an action object so you can literally dispatch a function, and your Action Creators look like this:
 
 ```js
 function foo (bar) {
@@ -174,7 +174,7 @@ function foo (dispatch, payload) {
 foo(store.dispatch, { foo: ‘bar’ })
 ```
 
-a function in which the `dispatch` callback always gets passed-in as first argument.
+a function in which the `dispatch` callback always gets passed-in as first argument. You could also pass in the very `store` instance if you need to `getState()`.
 
 If you care about names, I would call this an *action dispatcher* function, because that’s what it does. There’s no nesting, no type checking, no complexity. You just pass in a callback for dispatching an action with some payload. You’re just delegating `dispatch`ing actions to a helper function to do some things before the dispatch.
 
@@ -190,7 +190,7 @@ No more `ActionCreators.addTodo(text)`.
 
 ## Further reading
 
-https://gist.github.com/vslinko/cab24085f029def8997b by @vslinko  
+A [gist](https://gist.github.com/vslinko/cab24085f029def8997b) by [@vslinko](http://github.com/vslinko)    
 [The Evolution of Flux Frameworks](https://medium.com/@dan_abramov/the-evolution-of-flux-frameworks-6c16ad26bb31)
 
 ## License
