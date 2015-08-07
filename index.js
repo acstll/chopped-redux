@@ -1,5 +1,5 @@
 
-module.exports = function (update, state, listeners) {
+module.exports = function factory (update, state, listeners) {
   listeners = listeners || []
 
   if (typeof update !== 'function') {
@@ -29,10 +29,20 @@ module.exports = function (update, state, listeners) {
     }
   }
 
-  return {
-    getState: getState,
-    replaceState: replaceState,
-    dispatch: dispatch,
-    subscribe: subscribe
+  function store (nextUpdate, nextState, nextListeners) {
+    var args = [
+      nextUpdate || update,
+      nextState || state,
+      nextListeners || listeners
+    ]
+
+    return factory.apply(null, args)
   }
+
+  store.getState = getState
+  store.replaceState = replaceState // deprecate if `store()` API works
+  store.dispatch = dispatch
+  store.subscribe = subscribe
+
+  return store
 }

@@ -78,7 +78,7 @@ test('mutable, listeners', function (t) {
   unsubscribe()
 
   decrement(store.dispatch)
-  t.equal(store.getState().counter, 1, 'action dispatched 1')
+  t.equal(store.getState().counter, 1, 'action dispatched 2')
 
   t.equal(store.getState(), state, 'state is the same mutable object')
 })
@@ -92,7 +92,7 @@ test('immutable', function (t) {
   t.equal(store.getState().get('counter'), 2, 'action dispatched 1')
 
   decrement(store.dispatch)
-  t.equal(store.getState().get('counter'), 1, 'action dispatched 1')
+  t.equal(store.getState().get('counter'), 1, 'action dispatched 2')
 
   t.notEqual(store.getState(), immutableState, 'state is not the same object')
 })
@@ -168,4 +168,48 @@ test('empty dispatching', function (t) {
 
   var store = createStore(update)
   t.doesNotThrow(store.dispatch, 'is possible')
+})
+
+test('store is function and', function (t) {
+  t.plan(6)
+
+  var store = createStore(immutableUpdate, Immutable.Map({ counter: 10 }))
+  var store2
+
+  var nextUpdate = function (state, action) {
+    switch (action.type) {
+      case INCREMENT_COUNTER:
+        state = state.set('counter', state.get('counter') + 10)
+        break
+      case DECREMENT_COUNTER:
+        state = state.set('counter', state.get('counter') - 10)
+        break
+    }
+
+    return state
+  }
+
+  t.equal(typeof store, 'function', 'it is')
+
+  increment(store.dispatch)
+  t.equal(store.getState().get('counter'), 11, '(silly action dispatched 1)')
+
+  var off = store.subscribe(function () {
+    t.equal(store2.getState().get('counter'), 1, 'update fn gets replaced, state and listeners are kept')
+  })
+
+  store2 = store(nextUpdate) // replace `update`, keep the rest
+  decrement(store2.dispatch)
+
+  t.equal(store === store2, false, 'returns a new store')
+
+  off()
+
+  increment(store2.dispatch)
+  t.equal(store2.getState().get('counter'), 11, 'and unsubscribing works')
+
+  store2 = store2(null, Immutable.Map({ counter: 656 })) // only replace state
+
+  increment(store2.dispatch)
+  t.equal(store2.getState().get('counter'), 666, 'state gets replaced, update fn is kept')
 })
