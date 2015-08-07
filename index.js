@@ -1,9 +1,9 @@
 
-module.exports = function (reducer, state, listeners) {
+module.exports = function (update, state, listeners) {
   listeners = listeners || []
 
-  if (typeof reducer !== 'function') {
-    throw new TypeError('The `reducer` param must be a function.')
+  if (typeof update !== 'function') {
+    throw new TypeError('The `update` param must be a function.')
   }
 
   function getState () {
@@ -16,7 +16,7 @@ module.exports = function (reducer, state, listeners) {
 
   function dispatch (action) {
     action = action || {}
-    state = reducer(state, action)
+    state = update(state, action)
     listeners.forEach(function (fn) { fn(action) })
   }
 

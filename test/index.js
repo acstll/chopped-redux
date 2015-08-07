@@ -21,8 +21,8 @@ var decrement = function (dispatch) {
 var state = { counter: 1 }
 var immutableState = Immutable.Map({ counter: 1 })
 
-// Reducers
-var reducer = function (state, action) {
+// Updaters
+var update = function (state, action) {
   state = state || { counter: 10 }
 
   switch (action.type) {
@@ -36,7 +36,7 @@ var reducer = function (state, action) {
 
   return state
 }
-var immutableReducer = function (state, action) {
+var immutableUpdate = function (state, action) {
   switch (action.type) {
     case INCREMENT_COUNTER:
       state = state.set('counter', state.get('counter') + 1)
@@ -58,7 +58,7 @@ test('factory', function (t) {
 
   t.throws(function () {
     createStore()
-  }, 'throws if missing reducer param')
+  }, 'throws if missing update param')
 
   t.notEqual(a, b, 'no singleton')
 })
@@ -66,7 +66,7 @@ test('factory', function (t) {
 test('mutable, listeners', function (t) {
   t.plan(4)
 
-  var store = createStore(reducer, state)
+  var store = createStore(update, state)
 
   store.subscribe(function () {})
   var unsubscribe = store.subscribe(function () { t.pass('listener called') })
@@ -86,7 +86,7 @@ test('mutable, listeners', function (t) {
 test('immutable', function (t) {
   t.plan(3)
 
-  var store = createStore(immutableReducer, immutableState)
+  var store = createStore(immutableUpdate, immutableState)
 
   increment(store.dispatch)
   t.equal(store.getState().get('counter'), 2, 'action dispatched 1')
@@ -100,17 +100,17 @@ test('immutable', function (t) {
 test('no initial state provided', function (t) {
   t.plan(1)
 
-  var store = createStore(reducer, null)
+  var store = createStore(update, null)
 
   store.dispatch({ type: DECREMENT_COUNTER })
-  t.equal(store.getState().counter, 9, 'gets set in reducer')
+  t.equal(store.getState().counter, 9, 'gets set by updater')
 })
 
 test('first-class dispatch and getState, no bind', function (t) {
   t.plan(2)
 
   var initialState = { counter: 5 }
-  var store = createStore(reducer, initialState)
+  var store = createStore(update, initialState)
 
   function wrapper (fn) {
     return function (a) {
@@ -131,7 +131,7 @@ test('replaceState', function (t) {
   t.plan(2)
 
   var initialState = { counter: -1 }
-  var store = createStore(reducer, initialState)
+  var store = createStore(update, initialState)
 
   increment(store.dispatch)
   t.equal(store.getState().counter, 0, '(test dispatch)')
@@ -152,7 +152,7 @@ test('wrap/curry action factories', function (t) {
     })
   }
 
-  var store = createStore(reducer, { counter: 20 })
+  var store = createStore(update, { counter: 20 })
   var actions = wrap({ increment: inc }, store.dispatch)
 
   actions.increment({ foo: 'bar' })
@@ -166,6 +166,6 @@ test('wrap/curry action factories', function (t) {
 test('empty dispatching', function (t) {
   t.plan(1)
 
-  var store = createStore(reducer)
+  var store = createStore(update)
   t.doesNotThrow(store.dispatch, 'is possible')
 })

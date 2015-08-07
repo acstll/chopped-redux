@@ -31,7 +31,7 @@ This is how it works:
 ```js
 var createStore = require('chopped-redux')
 
-function reducer (state, action) {
+function update (state, action) {
   state = state || 0 // initialize state if empty
 
   if (action.type === 'increment') {
@@ -41,7 +41,7 @@ function reducer (state, action) {
   return state // always return state
 }
 
-var store = createStore(reducer)
+var store = createStore(update)
 var action = { type: 'increment' } // actions are objects
 
 store.subscribe(function () {
@@ -55,7 +55,7 @@ store.dispatch(action)
 Guidelines for success:
 
 - All state of your app goes into `state`, a single object
-- The `reducer` function is **pure** (it should *only* update and return new `state` and nothing else)
+- The `update` function is **pure** (it should *only* update and return new `state` and nothing else)
 - `actions` are plain objects with at least two properties `type` (String) and `payload` (Mixed)
 - You do async inside functions [(action dispatchers)](#async-and-action-creators) that call `dispatch` when done
 
@@ -72,15 +72,15 @@ Chopped Redux exports a single factory function that returns an object with four
   - `subscribe`
   - `replaceState`
 
-The factory has a single mandatory param which is a `reducer` function.
+The factory has a single mandatory param which is a `update` function.
 
-#### `createStore(reducer[, initialState, listeners])`
+#### `createStore(update[, initialState, listeners])`
 
-- *reducer* `Function`
+- *update* `Function`
 - *initialState* `Mixed` Anything you want to hold your state in
 - *listeners* `Array` Listener callbacks that subscribe to dispatches
 
-The `reducer` function should have the following signature:
+The `update` function should have the following signature:
 
 ```js
 function (state, action) {
@@ -93,7 +93,7 @@ function (state, action) {
 What happens internally on every action dispatch is basically this:
 
 ```js
-state = reducer(state, action)
+state = update(state, action)
 ```
 
 ---
@@ -139,7 +139,7 @@ This is a highly opinionated helper that "binds" your action dispatchers (aka ac
 
 Handling async stuff in vanilla Flux is a pain. In the beginning of Flux we were making API calls inside our Stores, that turned out to be a bad idea. So they came up with this pompous concept of Action Creators to confuse us all (at least for a while). [If you’re still confused, Action Creators are functions that return Actions, which are simply objects; so Action == plain object; Action Creator == function that creates an Action object.] Apparently no-one knows how to do this right.
 
-In Redux there’s middleware. The [thunk](https://github.com/gaearon/redux-thunk) middleware *transforms* an Action Creator (they call it “intent”) into an action object so you can literally dispatch a function, and your Action Creators look like this:
+In Redux there’s middleware. The [thunk](https://github.com/gaearon/redux-thunk) middleware *transforms* an Action Creator into an action object so you can literally dispatch a function, and your Action Creators look like this:
 
 ```js
 function foo (bar) {
@@ -176,7 +176,7 @@ foo(store.dispatch, { foo: ‘bar’ })
 
 a function in which the `dispatch` callback always gets passed-in as first argument. You could also pass in the very `store` instance if you need to `getState()`.
 
-If you care about names, I would call this an *action dispatcher* function, because that’s what it does. There’s no nesting, no type checking, no complexity. You just pass in a callback for dispatching an action with some payload. You’re just delegating `dispatch`ing actions to a helper function to do some things before the dispatch.
+I would call this an *action dispatcher* function, because that’s what it does. There’s no nesting, no type checking, no complexity. You just pass in a callback for dispatching an action with some payload. You’re just delegating `dispatch`ing actions to a helper function to do some things before the dispatch.
 
 If you don’t need async, simply `dispatch` the action directly and you’ve got one less function to care about.
 
