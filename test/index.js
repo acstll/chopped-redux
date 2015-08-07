@@ -170,8 +170,8 @@ test('empty dispatching', function (t) {
   t.doesNotThrow(store.dispatch, 'is possible')
 })
 
-test('store is function and', function (t) {
-  t.plan(6)
+test('factory returns a factory and', function (t) {
+  t.plan(7)
 
   var store = createStore(immutableUpdate, Immutable.Map({ counter: 10 }))
   var store2
@@ -189,10 +189,10 @@ test('store is function and', function (t) {
     return state
   }
 
-  t.equal(typeof store, 'function', 'it is')
+  t.equal(typeof store, 'function', 'it is a function')
 
   increment(store.dispatch)
-  t.equal(store.getState().get('counter'), 11, '(silly action dispatched 1)')
+  t.equal(store.getState().get('counter'), 11, '(initial dispatch)')
 
   var off = store.subscribe(function () {
     t.equal(store2.getState().get('counter'), 1, 'update fn gets replaced, state and listeners are kept')
@@ -212,4 +212,6 @@ test('store is function and', function (t) {
 
   increment(store2.dispatch)
   t.equal(store2.getState().get('counter'), 666, 'state gets replaced, update fn is kept')
+
+  t.notEqual(store.getState(), store2.getState(), 'state is independent between store copies')
 })
