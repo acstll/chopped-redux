@@ -141,7 +141,7 @@ test('replaceState', function (t) {
   t.equal(store.getState().counter, 23, 'works')
 })
 
-test('wrap/curry action factories', function (t) {
+test('wrap/curry action dispatchers', function (t) {
   t.plan(3)
 
   var inc = function (dispatch, data) {
