@@ -29,20 +29,10 @@ module.exports = function factory (update, state, listeners) {
     }
   }
 
-  function store (nextUpdate, nextState, nextListeners) {
-    var args = [
-      nextUpdate || update,
-      nextState || state,
-      nextListeners || listeners
-    ]
-
-    return factory.apply(null, args)
+  return {
+    getState: getState,
+    replaceState: replaceState,
+    dispatch: dispatch,
+    subscribe: subscribe
   }
-
-  store.getState = getState
-  store.replaceState = replaceState // deprecate if `store()` API works
-  store.dispatch = dispatch
-  store.subscribe = subscribe
-
-  return store
 }
