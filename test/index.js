@@ -3,7 +3,6 @@ var test = require('tape')
 var Immutable = require('immutable')
 
 var createStore = require('../')
-var wrap = require('../wrap')
 
 // Action types
 var INCREMENT_COUNTER = 'INCREMENT_COUNTER'
@@ -139,28 +138,6 @@ test('replaceState', function (t) {
   store.replaceState({ counter: 24 })
   decrement(store.dispatch)
   t.equal(store.getState().counter, 23, 'works')
-})
-
-test('wrap/curry action dispatchers', function (t) {
-  t.plan(3)
-
-  var inc = function (dispatch, data) {
-    t.equal(data.foo, 'bar', 'arguments get passed in')
-
-    dispatch({
-      type: INCREMENT_COUNTER
-    })
-  }
-
-  var store = createStore(update, { counter: 20 })
-  var actions = wrap({ increment: inc }, store.dispatch)
-
-  actions.increment({ foo: 'bar' })
-  t.equal(store.getState().counter, 21, 'works')
-
-  t.throws(function () {
-    wrap({ increment: increment }, store.dispatch)
-  }, 'must take at least 2 arguments')
 })
 
 test('empty dispatching', function (t) {
