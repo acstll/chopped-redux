@@ -18,6 +18,8 @@ module.exports = function factory (update, state) {
     action = action || {}
     state = update(state, action)
     listeners.forEach(function (fn) { fn(action) })
+
+    return action
   }
 
   function subscribe (fn) {

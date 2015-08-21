@@ -140,11 +140,14 @@ test('replaceState', function (t) {
   t.equal(store.getState().counter, 23, 'works')
 })
 
-test('empty dispatching', function (t) {
-  t.plan(1)
+test('dispatching', function (t) {
+  t.plan(2)
 
   var store = createStore(update)
-  t.doesNotThrow(store.dispatch, 'is possible')
+  t.doesNotThrow(store.dispatch, 'empty is possible')
+
+  var result = store.dispatch({ foo: 'bar' })
+  t.equal(result.foo, 'bar', 'returns given action')
 })
 
 test('`updater` property', function (t) {
