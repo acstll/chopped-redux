@@ -17,7 +17,7 @@ module.exports = function factory (update, state) {
   function dispatch (action) {
     action = action || {}
     state = update(state, action)
-    listeners.forEach(function (fn) { fn(action) })
+    listeners.slice().forEach(function (fn) { fn(action) })
 
     return action
   }

@@ -48,7 +48,7 @@ var immutableUpdate = function (state, action) {
   return state
 }
 
-test('factory', function (t) {
+test('Factory', function (t) {
   t.plan(2)
 
   var identity = function (x) { return x }
@@ -62,27 +62,31 @@ test('factory', function (t) {
   t.notEqual(a, b, 'no singleton')
 })
 
-test('mutable, listeners', function (t) {
-  t.plan(4)
+test('Dispatching', function (t) {
+  t.plan(2)
+
+  var store = createStore(update)
+  t.doesNotThrow(store.dispatch, 'empty is possible')
+
+  var result = store.dispatch({ foo: 'bar' })
+  t.equal(result.foo, 'bar', 'returns given action')
+})
+
+test('Mutable', function (t) {
+  t.plan(3)
 
   var store = createStore(update, state)
-
-  store.subscribe(function () {})
-  var unsubscribe = store.subscribe(function () { t.pass('listener called') })
-  store.subscribe(function () {})
 
   increment(store.dispatch)
   t.equal(store.getState().counter, 2, 'action dispatched 1')
 
-  unsubscribe()
-
   decrement(store.dispatch)
   t.equal(store.getState().counter, 1, 'action dispatched 2')
 
-  t.equal(store.getState(), state, 'state is the same mutable object')
+  t.equal(store.getState(), state, 'state is the same (mutable) object')
 })
 
-test('immutable', function (t) {
+test('Immutable', function (t) {
   t.plan(3)
 
   var store = createStore(immutableUpdate, immutableState)
@@ -96,7 +100,28 @@ test('immutable', function (t) {
   t.notEqual(store.getState(), immutableState, 'state is not the same object')
 })
 
-test('no initial state provided', function (t) {
+test('Listeners', function (t) {
+  t.plan(5)
+
+  var store = createStore(immutableUpdate, Immutable.Map({ counter: 5 }))
+
+  var off1 = store.subscribe(function () { t.pass('get called 1 (x2)') })
+  var off2 = store.subscribe(function () {
+    t.equal(store.getState().get('counter'), 6, 'can be remove from within (x1)')
+    off2()
+  })
+  var off3 = store.subscribe(function () { t.pass('get called 2 (x2)') })
+
+  store.dispatch({ type: INCREMENT_COUNTER })
+  store.dispatch()
+
+  off1()
+  off3()
+
+  store.dispatch()
+})
+
+test('No initial state provided', function (t) {
   t.plan(1)
 
   var store = createStore(update, null)
@@ -105,7 +130,7 @@ test('no initial state provided', function (t) {
   t.equal(store.getState().counter, 9, 'gets set by updater')
 })
 
-test('first-class dispatch and getState, no bind', function (t) {
+test('First-class dispatch and getState, no bind', function (t) {
   t.plan(2)
 
   var initialState = { counter: 5 }
@@ -120,10 +145,10 @@ test('first-class dispatch and getState, no bind', function (t) {
   var dispatch = wrapper(store.dispatch)
   var getState = wrapper(store.getState)
 
-  t.equal(getState(), initialState, 'getState')
+  t.equal(getState(), initialState, 'for getState')
 
   increment(dispatch)
-  t.equal(getState().counter, 6, 'dispatch')
+  t.equal(getState().counter, 6, 'for dispatch')
 })
 
 test('replaceState', function (t) {
@@ -138,16 +163,6 @@ test('replaceState', function (t) {
   store.replaceState({ counter: 24 })
   decrement(store.dispatch)
   t.equal(store.getState().counter, 23, 'works')
-})
-
-test('dispatching', function (t) {
-  t.plan(2)
-
-  var store = createStore(update)
-  t.doesNotThrow(store.dispatch, 'empty is possible')
-
-  var result = store.dispatch({ foo: 'bar' })
-  t.equal(result.foo, 'bar', 'returns given action')
 })
 
 test('`updater` property', function (t) {
