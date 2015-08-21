@@ -1,6 +1,6 @@
 
-module.exports = function factory (update, state, listeners) {
-  listeners = listeners || []
+module.exports = function factory (update, state) {
+  var listeners = []
 
   if (typeof update !== 'function') {
     throw new TypeError('The `update` param must be a function.')
