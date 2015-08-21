@@ -1,7 +1,7 @@
 {
   "name": "chopped-redux",
   "version": "3.0.0",
-  "description": "A subset of @gaearon Redux",
+  "description": "An implementation of @gaearon Redux",
   "keywords": [
     "flux",
     "redux",

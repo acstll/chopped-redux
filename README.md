@@ -1,16 +1,26 @@
 # Chopped Redux
 
-![npm version](https://img.shields.io/npm/v/chopped-redux.svg) ![npm downloads](https://img.shields.io/npm/dm/chopped-redux.svg)
+![npm version](https://img.shields.io/npm/v/chopped-redux.svg)
 
-This library is a subset of [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), which claims to be a "Predictable state container for JavaScript apps".
+This library is an implementation (a subset?) of [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), which claims to be a "Predictable state container for JavaScript apps".
 
-Redux is based on [Facebook's Flux](https://facebook.github.io/flux/) but it's a lot more simple a straightforward. Chopped Redux follows the same principles and ideas but cutting off features. If you care, it's 30 sloc (0.75 kB).
+Redux is based on [Facebook's Flux](https://facebook.github.io/flux/) but it's a lot more simple a straightforward. Chopped Redux follows the same principles and ideas but cutting off features, namely all utility methods and ES2015/7 magic. Chopped is practically the same as Redux's 1.0 core, just [read the source](https://github.com/acstll/chopped-redux/blob/master/index.js).
 
 This project follows [SemVer](http://semver.org/).
 
 ## Motivation
 
-In the beginning, Redux was a [React](http://facebook.github.io/react/) thing. So I wanted to have a similar library not tight to any rendering/view-layer library, and I was mainly inspired by [this](https://github.com/gaearon/redux/pull/166) and [this](https://github.com/gaearon/redux/issues/113#issuecomment-114049804), ideas which made the Flux unidirectional data-flow very simple. Redux is [free from React](https://github.com/gaearon/redux/issues/230) starting at 1.0. Still Chopped is a simpler alternative to it (though Redux is itself very small and simple). The things you'll miss from Redux here are basically `Middleware`, ES2015/7 magic and restrictions. Hot-reloading and time-travel are possible if you know what you're doing, or **why** you're doing it, but it's **not built-in**.
+In the beginning, Redux was a [React](http://facebook.github.io/react/) thing. So I wanted to have a similar library not tight to any rendering/view-layer library, and I was mainly inspired by [this](https://github.com/gaearon/redux/pull/166) and [this](https://github.com/gaearon/redux/issues/113#issuecomment-114049804), ideas which made the Flux unidirectional data-flow very simple. Redux is [free from React](https://github.com/gaearon/redux/issues/230) and free from `class`es starting at 1.0, so there's no reason for you to use Chopped instead of the genuine Redux if you don't find any of the key differences useful to you.
+
+### Key differences from Redux
+
+- There’s no init dispatch on `createStore()`, you need to do that yourself when you know it’s time to initialize your state.
+- You can pass anything to `dispatch()`, not only a plain object, it's your responsibility to handle that in the `update function.
+- You can call `dispatch()` with no arguments (an empty object will get dispatched), useful for initializing.
+- The dispatched `action` gets passed to listeners.
+- The `reducer` function is called `update` (this is just aesthetics).
+- There's an extra method `replaceState` (use carefully, the whole point of Redux is to make state changes sane and predictable).
+- `getReducer` and `replaceReducer` methods are missing.
 
 ## Install
 
@@ -32,7 +42,7 @@ This is how it works:
 var createStore = require('chopped-redux')
 
 function update (state, action) {
-  state = state || 0 // initialize state if empty
+  state = state || 0 // always initialize state if empty
 
   if (action.type === 'increment') {
     return state + 1
@@ -56,7 +66,8 @@ Guidelines for success:
 
 - All state of your app goes into `state`, a single object
 - The `update` function is **pure** (it should *only* update and return new `state` and nothing else)
-- `actions` are plain objects with at least two properties `type` (String) and `payload` (Mixed)
+- The `update` function always return some initial state if undefined.
+- `actions` are plain objects with at least one property: `type` (String), and an optional `payload` (Mixed).
 - You do async inside functions [(action dispatchers)](#async-and-action-creators) that call `dispatch` when done
 
 ## API
@@ -74,11 +85,10 @@ Chopped Redux exports a single factory function that returns an object with four
 
 The factory has a single mandatory param which is a `update` function.
 
-#### `createStore(update[, initialState, listeners])`
+#### `createStore(update[, initialState])`
 
 - *update* `Function`
 - *initialState* `Mixed` Anything you want to hold your state in
-- *listeners* `Array` Listener callbacks that subscribe to dispatches
 
 The `update` function should have the following signature:
 
@@ -119,27 +129,11 @@ state = update(state, action)
 
 This will replace the current state reference in your `store` instance. This could be used for debugging, time-travel, etc. Beware you need to call `dispatch` after replacing the state if you want your views to update or whatever.
 
-### Helpers
-
-#### `wrap(methods, dispatch)`
-
-Available at `require('chopped-redux/wrap')`.
-
-This is a highly opinionated helper that "binds" your action dispatchers (aka action creators) to the `dispatch`er of your `store` instance, by currying them.
-
-**These functions should expect at least two arguments.** Something like this makes sense: `function (dispatch, payload) {}`. See [Async and action creators](#async-and-action-creators) below.
-
-- Returns `Object` The same methods wrapping the dispatcher
-- *methods* `Object` An object with your action dispatcher functions
-- *dispatch* `Function` The `dispatch` method from your `store` instance
-
----
-
 ## Async and action creators
 
 Handling async stuff in vanilla Flux is a pain. In the beginning of Flux we were making API calls inside our Stores, that turned out to be a bad idea. So they came up with this pompous concept of Action Creators to confuse us all (at least for a while). [If you’re still confused, Action Creators are functions that return Actions, which are simply objects; so Action == plain object; Action Creator == function that creates an Action object.] Apparently no-one knows how to do this right.
 
-In Redux there’s middleware. The [thunk](https://github.com/gaearon/redux-thunk) middleware *transforms* an Action Creator into an action object so you can literally dispatch a function, and your Action Creators look like this:
+In Redux there’s middleware. The [thunk](https://github.com/gaearon/redux-thunk) middleware allows you to literally dispatch a function, and your Action Creators look like this:
 
 ```js
 function foo (bar) {
@@ -159,7 +153,7 @@ foo()
 
 ```
 
-I prefer to (partly) avoid the concept of Action Creators as mandatory, indirect boilerplate with a simpler approach  based only on the necessity of delaying the dispatch, namely this:
+I prefer a simpler and more explicit approach based only on the necessity of delaying the dispatch, namely this:
 
 ```js
 function foo (dispatch, payload) {
