@@ -33,6 +33,12 @@ module.exports = function factory (update, state, listeners) {
     getState: getState,
     replaceState: replaceState,
     dispatch: dispatch,
-    subscribe: subscribe
+    subscribe: subscribe,
+    get updater () {
+      return update
+    },
+    set updater (fn) {
+      update = fn
+    }
   }
 }

@@ -146,3 +146,20 @@ test('empty dispatching', function (t) {
   var store = createStore(update)
   t.doesNotThrow(store.dispatch, 'is possible')
 })
+
+test('`updater` property', function (t) {
+  t.plan(3)
+
+  var store = createStore(update)
+
+  store.dispatch()
+  t.equal(store.getState().counter, 10)
+
+  t.equal(typeof store.updater, 'function', 'is getter')
+
+  store.updater = function (state, action) {
+    return { counter: 99 }
+  }
+  store.dispatch()
+  t.equal(store.getState().counter, 99, 'is setter')
+})
