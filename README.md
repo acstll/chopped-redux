@@ -15,7 +15,7 @@ In the beginning, Redux was a [React](http://facebook.github.io/react/) thing. S
 ### Key differences from Redux
 
 - There’s no init dispatch on `createStore()`, you need to do that yourself when you know it’s time to initialize your state.
-- You can pass anything to `dispatch()`, not only a plain object, it's your responsibility to handle that in the `update function.
+- You can pass anything to `dispatch()`, not only a plain object, it's your responsibility to handle that in the `update` function.
 - You can call `dispatch()` with no arguments (an empty object will get dispatched), useful for initializing.
 - The dispatched `action` gets passed to listeners.
 - The `reducer` function is called `update` (this is just aesthetics).

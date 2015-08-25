@@ -107,7 +107,7 @@ test('Listeners', function (t) {
 
   var off1 = store.subscribe(function () { t.pass('get called 1 (x2)') })
   var off2 = store.subscribe(function () {
-    t.equal(store.getState().get('counter'), 6, 'can be remove from within (x1)')
+    t.equal(store.getState().get('counter'), 6, 'can be removed from within (x1)')
     off2()
   })
   var off3 = store.subscribe(function () { t.pass('get called 2 (x2)') })
