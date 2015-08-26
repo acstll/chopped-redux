@@ -2,7 +2,7 @@
 
 ![npm version](https://img.shields.io/npm/v/chopped-redux.svg)
 
-This library is an implementation (a subset?) of [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), which claims to be a "Predictable state container for JavaScript apps".
+This library is an implementation of [@gaearon](https://github.com/gaearon) [Redux](https://github.com/gaearon/redux), which claims to be a "Predictable state container for JavaScript apps".
 
 Redux is based on [Facebook's Flux](https://facebook.github.io/flux/) but it's a lot more simple a straightforward. Chopped Redux follows the same principles and ideas but cutting off features, namely all utility methods and ES2015/7 magic. Chopped is practically the same as Redux's 1.0 core, just [read the source](https://github.com/acstll/chopped-redux/blob/master/index.js).
 
@@ -14,13 +14,11 @@ In the beginning, Redux was a [React](http://facebook.github.io/react/) thing. S
 
 ### Key differences from Redux
 
-- There’s no init dispatch on `createStore()`, you need to do that yourself when you know it’s time to initialize your state.
+- There’s no init `@@redux/INIT` dispatch on `createStore()`, you need to do that yourself when you know it’s time to initialize your state.
 - You can pass anything to `dispatch()`, not only a plain object, it's your responsibility to handle that in the `update` function.
 - You can call `dispatch()` with no arguments (an empty object will get dispatched), useful for initializing.
 - The dispatched `action` gets passed to listeners.
 - The `reducer` function is called `update` (this is just aesthetics).
-- There's an extra method `replaceState` (use carefully, the whole point of Redux is to make state changes sane and predictable).
-- `getReducer` and `replaceReducer` methods are missing.
 
 ## Install
 
@@ -81,7 +79,6 @@ Chopped Redux exports a single factory function that returns an object with four
   - `dispatch`
   - `getState`
   - `subscribe`
-  - `replaceState`
 
 The factory has a single mandatory param which is a `update` function.
 
@@ -122,12 +119,9 @@ state = update(state, action)
 - Returns `Function` A function to remove the listener
 - *listener* `Function` A callback that gets fired after every state update
 
-#### `replaceState(state)`
+## Old replaceState
 
-- Returns `undefined`
-- *state* `Mixed` Whatever your state is
-
-This will replace the current state reference in your `store` instance. This could be used for debugging, time-travel, etc. Beware you need to call `dispatch` after replacing the state if you want your views to update or whatever.
+In previous versions (<=4.0.0) there was a `replaceState` method, this was a shortcut for an action that can be easily achieved in a pure Redux manner: By dispatching a `REPLACE_STATE`-typed action and swapping the new state in the `update` function.
 
 ## Async and action creators
 

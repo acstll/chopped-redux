@@ -10,10 +10,6 @@ module.exports = function factory (update, state) {
     return state
   }
 
-  function replaceState (nextState) {
-    state = nextState
-  }
-
   function dispatch (action) {
     action = action || {}
     state = update(state, action)
@@ -33,14 +29,7 @@ module.exports = function factory (update, state) {
 
   return {
     getState: getState,
-    replaceState: replaceState,
     dispatch: dispatch,
-    subscribe: subscribe,
-    get updater () {
-      return update
-    },
-    set updater (fn) {
-      update = fn
-    }
+    subscribe: subscribe
   }
 }

@@ -7,6 +7,7 @@ var createStore = require('../')
 // Action types
 var INCREMENT_COUNTER = 'INCREMENT_COUNTER'
 var DECREMENT_COUNTER = 'DECREMENT_COUNTER'
+var REPLACE_STATE = 'REPLACE_STATE'
 
 // Action helpers
 var increment = function (dispatch) {
@@ -30,6 +31,9 @@ var update = function (state, action) {
       break
     case DECREMENT_COUNTER:
       state.counter--
+      break
+    case REPLACE_STATE:
+      state = action.payload
       break
   }
 
@@ -151,33 +155,16 @@ test('First-class dispatch and getState, no bind', function (t) {
   t.equal(getState().counter, 6, 'for dispatch')
 })
 
-test('replaceState', function (t) {
+// just proof of concept, not testing anything
+test('old replaceState is possible using pure Redux', function (t) {
   t.plan(2)
 
-  var initialState = { counter: -1 }
-  var store = createStore(update, initialState)
+  var store = createStore(update, { counter: 99 })
+  var dispatch = store.dispatch
 
-  increment(store.dispatch)
-  t.equal(store.getState().counter, 0, '(test dispatch)')
+  dispatch({ type: INCREMENT_COUNTER })
+  t.equal(store.getState().counter, 100, 'yes')
 
-  store.replaceState({ counter: 24 })
-  decrement(store.dispatch)
-  t.equal(store.getState().counter, 23, 'works')
-})
-
-test('`updater` property', function (t) {
-  t.plan(3)
-
-  var store = createStore(update)
-
-  store.dispatch()
-  t.equal(store.getState().counter, 10)
-
-  t.equal(typeof store.updater, 'function', 'is getter')
-
-  store.updater = function (state, action) {
-    return { counter: 99 }
-  }
-  store.dispatch()
-  t.equal(store.getState().counter, 99, 'is setter')
+  dispatch({ type: REPLACE_STATE, payload: { counter: 25 } })
+  t.equal(store.getState().counter, 25, 'it is')
 })
